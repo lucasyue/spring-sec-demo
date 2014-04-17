@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans:beans xmlns="http://www.springframework.org/schema/security"
+	xmlns:beans="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans
+	           http://www.springframework.org/schema/beans/spring-beans-3.1.xsd
+	           http://www.springframework.org/schema/security
+	           http://www.springframework.org/schema/security/spring-security-3.2.xsd">
+	<http auto-config='true'>
+		<!-- <custom-filter ref="filterSecurityInterceptor" before="FILTER_SECURITY_INTERCEPTOR" 
+			/> <form-login /> <logout logout-success-url="/logout.jsp" /> -->
+		<intercept-url pattern="/a.jsp" access="ROLE_ADMIN" />
+		<intercept-url pattern="/b.jsp" access="ROLE_USER" />
+		<intercept-url pattern="/c.jsp" access="IS_AUTHENTICATED_ANONYMOUSLY" />
+		<intercept-url pattern="/d.jsp" access="IS_AUTHENTICATED_FULLY" />
+		<intercept-url pattern="/**" access="IS_AUTHENTICATED_FULLY" />
+	</http>
+	<user-service id="userService1">
+		<user name="user1" password="user1" authorities="ROLE_TEST" />
+		<user name="user2" password="user2" authorities="ROLE_SPITTER" />
+		<user name="admin" password="admin" authorities="ROLE_ADMIN,ROLE_USER" />
+	</user-service>
+	<beans:bean id="formAuthentication" class="cn.auth.FormAuthentication" />
+	<authentication-manager alias="authenticationManager">
+		<authentication-provider>
+			<jdbc-user-service data-source-ref="dataSource" />
+		</authentication-provider>
+		<!-- <authentication-provider user-service-ref="userService1" /> -->
+		<!-- <authentication-provider ref="formAuthentication"> </authentication-provider> -->
+	</authentication-manager>
+	<beans:bean id="accessManager" class="cn.access.UrlAccessManager">
+	</beans:bean>
+	<beans:bean id="urlMetaSource" class="cn.access.UrlMetaSource">
+	</beans:bean>
+
+	<beans:bean id="filterSecurityInterceptor"
+		class="org.springframework.security.web.access.intercept.FilterSecurityInterceptor">
+		<beans:property name="securityMetadataSource" ref="urlMetaSource"></beans:property>
+		<beans:property name="authenticationManager" ref="authenticationManager"></beans:property>
+		<beans:property name="accessDecisionManager" ref="accessManager"></beans:property>
+	</beans:bean>
+	<beans:bean id="userSalarySecurity"
+		class="org.springframework.security.access.intercept.aspectj.AspectJMethodSecurityInterceptor">
+		<beans:property name="authenticationManager" ref="authenticationManager" />
+		<beans:property name="accessDecisionManager" ref="accessManager" />
+		<beans:property name="securityMetadataSource">
+			<beans:bean
+				class="org.springframework.security.access.method.MapBasedMethodSecurityMetadataSource">
+			</beans:bean>
+		</beans:property>
+	</beans:bean>
+	<beans:bean id="dataSource" class="com.alibaba.druid.pool.DruidDataSource"
+		init-method="init" destroy-method="close">
+		<!-- base config -->
+		<beans:property name="url"
+			value="jdbc:mysql://localhost:3306/test?useUnicode=true&amp;characterEncoding=UTF-8" />
+		<beans:property name="username" value="root" />
+		<beans:property name="password"
+			value="bNVOqb7WKLX5Bjnw+LMv92taj25KOxDimXxILPQjw42wgv+1lHzOH8kr97xDwWdhpY67QuYCS7sWN4W46YbkFA==" />
+		<!-- config connection count -->
+		<beans:property name="initialSize" value="1" />
+		<beans:property name="minIdle" value="1" />
+		<beans:property name="maxActive" value="10" />
+		<!-- 配置获取连接等待超时的时间 -->
+		<beans:property name="maxWait" value="60000" />
+		<!-- 配置间隔多久才进行一次检测，检测需要关闭的空闲连接，单位是毫秒 -->
+		<beans:property name="timeBetweenEvictionRunsMillis"
+			value="60000" />
+		<!-- 配置一个连接在池中最小生存的时间，单位是毫秒 -->
+		<beans:property name="minEvictableIdleTimeMillis"
+			value="300000" />
+		<beans:property name="validationQuery" value="SELECT 'x'" />
+		<beans:property name="testWhileIdle" value="true" />
+		<beans:property name="testOnBorrow" value="false" />
+		<beans:property name="testOnReturn" value="false" />
+		<!-- 打开PSCache，并且指定每个连接上PSCache的大小 -->
+		<beans:property name="poolPreparedStatements" value="false" />
+		<beans:property name="maxPoolPreparedStatementPerConnectionSize"
+			value="20" />
+		<!-- 配置监控统计拦截的filters -->
+		<beans:property name="filters" value="stat,log4j,config" />
+		<beans:property name="connectionProperties" value="config.decrypt=true" />
+	</beans:bean>
+</beans:beans>
+
